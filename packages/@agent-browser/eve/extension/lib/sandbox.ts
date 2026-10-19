@@ -28,11 +28,14 @@ export interface EveSandboxCommandResult {
 }
 
 export interface EveSandboxSession {
-  readonly id: string;
+  /** Present on eve versions whose sandbox sessions expose an id. */
+  readonly id?: string;
   run(options: { readonly abortSignal?: AbortSignal; readonly command: string }): PromiseLike<EveSandboxCommandResult>;
 }
 
 export interface EveToolContext {
+  /** Durable eve session; its id names the browser session on eve versions without sandbox ids. */
+  readonly session?: { readonly id: string };
   getSandbox(): PromiseLike<EveSandboxSession | null>;
 }
 
@@ -164,6 +167,15 @@ export async function installAgentBrowser(
   return results;
 }
 
+/** Newer eve sandbox sessions have no `id`; the durable eve session id is stable per sandbox. */
+function requireSandboxKey(ctx: EveToolContext, sandbox: EveSandboxSession): string {
+  const key = sandbox.id ?? ctx.session?.id;
+  if (key === undefined) {
+    throw new Error("agent-browser could not derive a session name; pass the `session` option.");
+  }
+  return key;
+}
+
 export async function runAgentBrowser<TJson = unknown>(
   ctx: EveToolContext,
   args: AgentBrowserArgs,
@@ -174,7 +186,7 @@ export async function runAgentBrowser<TJson = unknown>(
     throw new Error("agent-browser requires an Eve sandbox. Configure agent/sandbox.ts first.");
   }
 
-  const session = options.session ?? defaultSessionName(options.sessionPrefix ?? "eve", sandbox.id);
+  const session = options.session ?? defaultSessionName(options.sessionPrefix ?? "eve", requireSandboxKey(ctx, sandbox));
   const command = buildAgentBrowserCommand(args, { ...options, session });
   const result = await sandbox.run({ abortSignal: options.abortSignal, command });
 

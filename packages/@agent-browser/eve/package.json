@@ -64,7 +64,7 @@
   "devDependencies": {
     "@types/node": "24.x",
     "ai": "7.0.102",
-    "eve": "^0.57.0",
+    "eve": "^0.81.0",
     "typescript": "7.0.2"
   },
   "engines": {

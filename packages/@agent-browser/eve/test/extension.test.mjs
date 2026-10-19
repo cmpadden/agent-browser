@@ -164,6 +164,17 @@ test("rejects config CA selection with a simultaneous clear", async () => {
   resetConfig();
 });
 
+test("falls back to ctx.session.id when the sandbox session has no id", async () => {
+  resetConfig();
+  const sandbox = fakeSandbox();
+  delete sandbox.id;
+  await tools.navigate.execute(
+    { action: "goto", url: "https://example.com" },
+    { session: { id: "wrun_01ABC" }, getSandbox: async () => sandbox },
+  );
+  assert.ok(sandbox.commands.at(-1).startsWith("agent-browser --session eve-wrun_01ABC "));
+});
+
 test("uses a fixed session name when configured", async () => {
   resetConfig({ session: "shared" });
   const sandbox = fakeSandbox({ id: "fixed-session" });
