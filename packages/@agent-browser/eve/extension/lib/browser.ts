@@ -11,7 +11,6 @@ import extension from "../extension";
 /** Structural subset of eve's tool context — every eve `ctx` satisfies it. */
 export interface BrowserToolContext {
   readonly abortSignal?: AbortSignal;
-  readonly session?: { readonly id: string };
   getSandbox(): PromiseLike<EveSandboxSession | null | undefined>;
 }
 
@@ -69,7 +68,7 @@ export async function runBrowser<TData = unknown>(
   const config = extension.config;
   const command = buildAgentBrowserCommand([...args, ...configArgs()], {
     binary: config.binary,
-    session: config.session ?? defaultSessionName(config.sessionPrefix, requireSessionKey(ctx, sandbox)),
+    session: config.session ?? defaultSessionName(config.sessionPrefix, sandbox.id ?? "default"),
   });
   const raw = await withDeadline(
     sandbox.run({ abortSignal: ctx.abortSignal, command }),
@@ -102,21 +101,11 @@ async function requireSandbox(ctx: BrowserToolContext): Promise<EveSandboxSessio
   return sandbox;
 }
 
-/** Newer eve sandbox sessions have no `id`; the durable eve session id is stable across sandbox recreation. */
-function requireSessionKey(ctx: BrowserToolContext, sandbox: EveSandboxSession): string {
-  const key = sandbox.id ?? ctx.session?.id;
-  if (key === undefined) {
-    throw new Error("agent-browser could not derive a session name; set the `session` config option.");
-  }
-  return key;
-}
-
 async function ensureInstalled(sandbox: EveSandboxSession, abortSignal?: AbortSignal): Promise<void> {
   if (!extension.config.autoInstall) {
     return;
   }
-  // Cache by sandbox id only. A session id outlives its sandbox, so a recreated sandbox
-  // would wrongly skip installation. Without a sandbox id, the cheap probe runs every call.
+  // Newer eve sandbox sessions have no id; without one, the cheap probe runs every call.
   const key = sandbox.id;
   if (key === undefined) {
     await installIfMissing(sandbox, abortSignal);

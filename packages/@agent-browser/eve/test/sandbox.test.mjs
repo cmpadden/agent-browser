@@ -88,10 +88,9 @@ test("runs agent-browser through ctx.getSandbox", async () => {
   assert.equal(commands[0], "agent-browser --session eve-sandbox-id-1 open https://example.com --json");
 });
 
-test("derives the session name from ctx.session.id when the sandbox has no id", async () => {
+test("uses one default session when the sandbox has no id", async () => {
   const commands = [];
   const ctx = {
-    session: { id: "wrun_01ABC" },
     async getSandbox() {
       return {
         async run({ command }) {
@@ -104,18 +103,7 @@ test("derives the session name from ctx.session.id when the sandbox has no id", 
 
   await runAgentBrowser(ctx, ["open", "https://example.com"]);
 
-  assert.equal(commands[0], "agent-browser --session eve-wrun_01ABC open https://example.com --json");
-});
-
-test("requires a session option when neither the sandbox nor ctx has an id", async () => {
-  const ctx = {
-    async getSandbox() {
-      return { async run() { return { exitCode: 0, stdout: "{}", stderr: "" }; } };
-    },
-  };
-
-  await assert.rejects(() => runAgentBrowser(ctx, ["open", "https://example.com"]), /could not derive a session name/);
-  await runAgentBrowser(ctx, ["open", "https://example.com"], { session: "fixed" });
+  assert.equal(commands[0], "agent-browser --session eve-default open https://example.com --json");
 });
 
 test("uses a short generated session for long Eve sandbox ids", async () => {
