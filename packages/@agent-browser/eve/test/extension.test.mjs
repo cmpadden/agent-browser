@@ -175,6 +175,17 @@ test("falls back to ctx.session.id when the sandbox session has no id", async ()
   assert.ok(sandbox.commands.at(-1).startsWith("agent-browser --session eve-wrun_01ABC "));
 });
 
+test("probes for agent-browser on every call when the sandbox has no id", async () => {
+  resetConfig();
+  const sandbox = fakeSandbox();
+  delete sandbox.id;
+  const ctx = { session: { id: "wrun_probe" }, getSandbox: async () => sandbox };
+  await tools.navigate.execute({ action: "goto", url: "https://example.com" }, ctx);
+  await tools.navigate.execute({ action: "goto", url: "https://example.com" }, ctx);
+  const probes = sandbox.commands.filter((command) => command.startsWith("command -v "));
+  assert.equal(probes.length, 2);
+});
+
 test("uses a fixed session name when configured", async () => {
   resetConfig({ session: "shared" });
   const sandbox = fakeSandbox({ id: "fixed-session" });

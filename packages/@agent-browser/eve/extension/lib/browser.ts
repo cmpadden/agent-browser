@@ -64,12 +64,12 @@ export async function runBrowser<TData = unknown>(
   args: readonly string[],
 ): Promise<TData> {
   const sandbox = await requireSandbox(ctx);
-  await ensureInstalled(sandbox, sandboxKey(ctx, sandbox), ctx.abortSignal);
+  await ensureInstalled(sandbox, ctx.abortSignal);
 
   const config = extension.config;
   const command = buildAgentBrowserCommand([...args, ...configArgs()], {
     binary: config.binary,
-    session: config.session ?? defaultSessionName(config.sessionPrefix, requireSandboxKey(ctx, sandbox)),
+    session: config.session ?? defaultSessionName(config.sessionPrefix, requireSessionKey(ctx, sandbox)),
   });
   const raw = await withDeadline(
     sandbox.run({ abortSignal: ctx.abortSignal, command }),
@@ -102,25 +102,23 @@ async function requireSandbox(ctx: BrowserToolContext): Promise<EveSandboxSessio
   return sandbox;
 }
 
-/** Newer eve sandbox sessions have no `id`; the durable eve session id is stable per sandbox. */
-function sandboxKey(ctx: BrowserToolContext, sandbox: EveSandboxSession): string | undefined {
-  return sandbox.id ?? ctx.session?.id;
-}
-
-function requireSandboxKey(ctx: BrowserToolContext, sandbox: EveSandboxSession): string {
-  const key = sandboxKey(ctx, sandbox);
+/** Newer eve sandbox sessions have no `id`; the durable eve session id is stable across sandbox recreation. */
+function requireSessionKey(ctx: BrowserToolContext, sandbox: EveSandboxSession): string {
+  const key = sandbox.id ?? ctx.session?.id;
   if (key === undefined) {
     throw new Error("agent-browser could not derive a session name; set the `session` config option.");
   }
   return key;
 }
 
-async function ensureInstalled(sandbox: EveSandboxSession, key: string | undefined, abortSignal?: AbortSignal): Promise<void> {
+async function ensureInstalled(sandbox: EveSandboxSession, abortSignal?: AbortSignal): Promise<void> {
   if (!extension.config.autoInstall) {
     return;
   }
+  // Cache by sandbox id only. A session id outlives its sandbox, so a recreated sandbox
+  // would wrongly skip installation. Without a sandbox id, the cheap probe runs every call.
+  const key = sandbox.id;
   if (key === undefined) {
-    // Without a stable key the install result can't be cached; the probe is cheap.
     await installIfMissing(sandbox, abortSignal);
     return;
   }
