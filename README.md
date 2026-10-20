@@ -1137,6 +1137,8 @@ The dashboard displays:
 - **Session creation**: create new sessions from the UI with local engines (Chrome, Lightpanda) or cloud providers (AgentCore, Browserbase, Browserless, Browser Use, Kernel)
 - **AI Chat**: chat with an AI assistant directly in the dashboard (requires Vercel AI Gateway configuration)
 
+On desktop, close the right sidebar with its header button or the toggle at the right end of the viewport status bar. Use the status bar toggle to reopen it at its previous width; the selected tab and panel state are preserved. Mobile layouts continue to use tabs.
+
 ### AI Chat
 
 The dashboard includes an optional AI chat panel powered by the Vercel AI Gateway. The same functionality is available directly from the CLI via the `chat` command. Set these environment variables to enable AI chat:

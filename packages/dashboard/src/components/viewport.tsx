@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai/react";
 import { ArrowLeft, ArrowRight, Camera, Circle, FileCode, Maximize, Moon, RotateCw, Smartphone, Square, Sun, Wifi, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -121,7 +121,8 @@ function normalizeUrl(input: string): string {
   return `https://${trimmed}`;
 }
 
-export function Viewport() {
+/** Optional footer actions stay available even when the browser is disconnected. */
+export function Viewport({ footerActions }: { footerActions?: ReactNode }) {
   const frame = useAtomValue(currentFrameAtom);
   const viewportWidth = useAtomValue(viewportWidthAtom);
   const viewportHeight = useAtomValue(viewportHeightAtom);
@@ -661,6 +662,7 @@ export function Viewport() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {footerActions}
         </div>
       </div>
 

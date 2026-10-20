@@ -3248,6 +3248,8 @@ Running 'agent-browser dashboard' with no subcommand is equivalent to 'dashboard
 
 The dashboard runs as a standalone background process, independent of
 browser sessions. All sessions automatically stream to the dashboard.
+On desktop, close the right sidebar from its header or toggle it from the
+viewport status bar. Reopening preserves its width, selected tab, and state.
 Loopback origins work without configuration or a token. For a reverse-proxied or
 forwarded dashboard, pass --allowed-origins with the exact browser origin
 or set AGENT_BROWSER_DASHBOARD_ALLOWED_ORIGINS. The browser stays on the
